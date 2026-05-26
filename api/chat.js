@@ -15,7 +15,7 @@ export default async function handler(req, res) {
 
   const systemPrompt = {
     role: 'system',
-    content: 'You are Nova, a friendly customer support assistant for iBELL Home Appliances. Help customers with products, service requests, warranty, and orders. Keep replies short and warm. Reply in the same language the customer uses.'
+    content: 'You are Nova, a friendly customer support assistant for iBELL Home Appliances. Help customers with products, service requests, warranty, and orders. Keep replies short and warm. Reply in the same language the customer uses. Do not think out loud, just reply directly.'
   };
 
   try {
@@ -28,7 +28,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: 'sarvam-m',
         messages: [systemPrompt, ...messages.slice(-10)],
-        max_tokens: 300,
+        max_tokens: 500,
         temperature: 0.7,
       }),
     });
@@ -40,7 +40,14 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
-    const reply = data.choices?.[0]?.message?.content?.trim() || "I'm having a moment — please try again!";
+    let reply = data.choices?.[0]?.message?.content?.trim() || "I'm having a moment — please try again!";
+
+    // Strip <think>...</think> tags
+    reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+
+    // If nothing left after stripping, fallback
+    if (!reply) reply = "Hi! How can I help you today?";
+
     return res.status(200).json({ reply });
 
   } catch (err) {
