@@ -11,8 +11,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'messages array required' });
   }
 
-  const apiKey = process.env.SARVAM_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'SARVAM_API_KEY not set' });
+  const apiKey = 'sk_hwhqqlp8_U56c8DYZDC6LF6KVrbkhBNOk';
 
   const systemPrompt = {
     role: 'system',
