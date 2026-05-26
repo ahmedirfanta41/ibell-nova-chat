@@ -24,10 +24,9 @@ export default async function handler(req, res) {
         model: 'sarvam-m',
         messages: [
           {
-            role: 'system',
-            content: 'You are Nova, iBELL support assistant. Reply in 1-2 sentences only. No thinking. Just answer.'
-          },
-          ...messages.slice(-6)
+            role: 'user',
+            content: 'You are Nova, iBELL Home Appliances support. Reply in 1-2 sentences. No thinking tags. Message: ' + (messages[messages.length-1]?.content || 'hello')
+          }
         ],
         max_tokens: 2048,
         temperature: 0.1,
@@ -42,7 +41,6 @@ export default async function handler(req, res) {
     const data = await response.json();
     let reply = data.choices?.[0]?.message?.content?.trim() || '';
 
-    // Remove think tags - both complete and incomplete
     reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
     reply = reply.replace(/<think>[\s\S]*/gi, '').trim();
 
