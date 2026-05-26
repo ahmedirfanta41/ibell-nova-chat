@@ -11,25 +11,27 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'messages array required' });
   }
 
-  const apiKey = 'sk_hwhqqlp8_U56c8DYZDC6LF6KVrbkhBNOk';
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'GROQ_API_KEY not set' });
 
   try {
-    const response = await fetch('https://api.sarvam.ai/v1/chat/completions', {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'api-subscription-key': apiKey,
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'sarvam-m',
+        model: 'llama-3.1-8b-instant',
         messages: [
           {
-            role: 'user',
-            content: 'You are Nova, iBELL Home Appliances support. Reply in 1-2 sentences. No thinking tags. Message: ' + (messages[messages.length-1]?.content || 'hello')
-          }
+            role: 'system',
+            content: 'You are Nova, a friendly customer support assistant for iBELL Home Appliances. Help customers with products, service requests, warranty, and orders. Keep replies short and warm — 1 to 3 sentences max. Reply in the same language the customer uses.'
+          },
+          ...messages.slice(-10)
         ],
-        max_tokens: 2048,
-        temperature: 0.1,
+        max_tokens: 300,
+        temperature: 0.7,
       }),
     });
 
@@ -39,13 +41,7 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
-    let reply = data.choices?.[0]?.message?.content?.trim() || '';
-
-    reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-    reply = reply.replace(/<think>[\s\S]*/gi, '').trim();
-
-    if (!reply) reply = "Hi! I'm Nova from iBELL support. How can I help you today?";
-
+    const reply = data.choices?.[0]?.message?.content?.trim() || "I'm having a moment — please try again!";
     return res.status(200).json({ reply });
 
   } catch (err) {
