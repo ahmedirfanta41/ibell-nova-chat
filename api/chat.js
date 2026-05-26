@@ -13,11 +13,6 @@ export default async function handler(req, res) {
 
   const apiKey = 'sk_hwhqqlp8_U56c8DYZDC6LF6KVrbkhBNOk';
 
-  const systemPrompt = {
-    role: 'system',
-    content: 'You are Nova, a friendly customer support assistant for iBELL Home Appliances. Help customers with products, service requests, warranty, and orders. Keep replies short and warm. Reply in the same language the customer uses. Do not think out loud, just reply directly.'
-  };
-
   try {
     const response = await fetch('https://api.sarvam.ai/v1/chat/completions', {
       method: 'POST',
@@ -27,31 +22,34 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'sarvam-m',
-        messages: [systemPrompt, ...messages.slice(-10)],
-        max_tokens: 500,
-        temperature: 0.7,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are Nova, iBELL Home Appliances support assistant. Be brief and helpful. No thinking tags. Just reply directly.'
+          },
+          ...messages.slice(-6)
+        ],
+        max_tokens: 1024,
+        temperature: 0.3,
       }),
     });
 
     if (!response.ok) {
       const err = await response.text();
-      console.error('Sarvam error:', response.status, err);
       return res.status(500).json({ error: 'AI error', detail: err });
     }
 
     const data = await response.json();
-    let reply = data.choices?.[0]?.message?.content?.trim() || "I'm having a moment — please try again!";
+    let reply = data.choices?.[0]?.message?.content?.trim() || '';
 
-    // Strip <think>...</think> tags
     reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    reply = reply.replace(/<think>[\s\S]*/gi, '').trim();
 
-    // If nothing left after stripping, fallback
-    if (!reply) reply = "Hi! How can I help you today?";
+    if (!reply) reply = "Hello! I'm Nova from iBELL support. How can I help you?";
 
     return res.status(200).json({ reply });
 
   } catch (err) {
-    console.error('Handler error:', err);
     return res.status(500).json({ error: 'Server error', detail: err.message });
   }
 }
