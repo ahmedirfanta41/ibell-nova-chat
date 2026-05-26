@@ -25,12 +25,12 @@ export default async function handler(req, res) {
         messages: [
           {
             role: 'system',
-            content: 'You are Nova, iBELL Home Appliances support assistant. Be brief and helpful. No thinking tags. Just reply directly.'
+            content: 'You are Nova, iBELL support assistant. Reply in 1-2 sentences only. No thinking. Just answer.'
           },
           ...messages.slice(-6)
         ],
-        max_tokens: 1024,
-        temperature: 0.3,
+        max_tokens: 2048,
+        temperature: 0.1,
       }),
     });
 
@@ -42,10 +42,11 @@ export default async function handler(req, res) {
     const data = await response.json();
     let reply = data.choices?.[0]?.message?.content?.trim() || '';
 
+    // Remove think tags - both complete and incomplete
     reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
     reply = reply.replace(/<think>[\s\S]*/gi, '').trim();
 
-    if (!reply) reply = "Hello! I'm Nova from iBELL support. How can I help you?";
+    if (!reply) reply = "Hi! I'm Nova from iBELL support. How can I help you today?";
 
     return res.status(200).json({ reply });
 
