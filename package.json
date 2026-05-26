@@ -1,0 +1,8 @@
+{
+  "name": "ibell-nova-chat",
+  "version": "1.0.0",
+  "description": "iBELL Nova — AI Customer Support Chat",
+  "engines": {
+    "node": ">=18"
+  }
+}
