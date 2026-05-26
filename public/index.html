@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>iBELL Support — Nova</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #f2f2f7;
+      --surface:   #ffffff;
+      --header-bg: rgba(242,242,247,0.92);
+      --bubble-in: #e9e9eb;
+      --bubble-out:#007aff;
+      --text-in:   #000000;
+      --text-out:  #ffffff;
+      --text-dim:  #8e8e93;
+      --border:    rgba(0,0,0,0.08);
+      --red:       #ff3b30;
+      --green:     #34c759;
+      --ibell:     #e8001c;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+      background: var(--bg);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .header {
+      background: var(--header-bg);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 10;
+      position: relative;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1c1c1e 0%, #3a3a3c 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .avatar::after {
+      content: '';
+      position: absolute;
+      bottom: 1px;
+      right: 1px;
+      width: 10px;
+      height: 10px;
+      background: var(--green);
+      border-radius: 50%;
+      border: 2px solid var(--bg);
+    }
+
+    .header-info { flex: 1; min-width: 0; }
+    .header-name {
+      font-size: 17px;
+      font-weight: 600;
+      color: #000;
+      line-height: 1.2;
+    }
+    .header-sub {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 1px;
+    }
+
+    .header-badge {
+      background: var(--ibell);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 16px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      scroll-behavior: smooth;
+    }
+    .messages::-webkit-scrollbar { display: none; }
+
+    .date-label {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-dim);
+      font-weight: 500;
+      margin: 12px 0 8px;
+      letter-spacing: 0.2px;
+    }
+
+    .msg-row {
+      display: flex;
+      flex-direction: column;
+      max-width: 80%;
+      animation: bubble-in 0.22s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes bubble-in {
+      from { opacity:0; transform: scale(0.85) translateY(6px); }
+      to   { opacity:1; transform: scale(1)    translateY(0);   }
+    }
+
+    .msg-row.outgoing {
+      align-self: flex-end;
+      align-items: flex-end;
+    }
+    .msg-row.incoming {
+      align-self: flex-start;
+      align-items: flex-start;
+    }
+
+    .bubble {
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 16px;
+      line-height: 1.45;
+      word-break: break-word;
+      position: relative;
+    }
+
+    .incoming .bubble {
+      background: var(--bubble-in);
+      color: var(--text-in);
+      border-bottom-left-radius: 5px;
+    }
+    .outgoing .bubble {
+      background: var(--bubble-out);
+      color: var(--text-out);
+      border-bottom-right-radius: 5px;
+    }
+
+    .msg-row + .msg-row.incoming  { margin-top: 2px; }
+    .msg-row + .msg-row.outgoing  { margin-top: 2px; }
+    .msg-row.incoming + .msg-row.outgoing,
+    .msg-row.outgoing + .msg-row.incoming { margin-top: 10px; }
+
+    .msg-time {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 3px;
+      padding: 0 4px;
+    }
+
+    .typing-bubble {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      padding: 13px 16px;
+      background: var(--bubble-in);
+      border-radius: 18px;
+      border-bottom-left-radius: 5px;
+      width: fit-content;
+    }
+    .typing-bubble span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #aeaeb2;
+      animation: dot-bounce 1.3s ease-in-out infinite;
+    }
+    .typing-bubble span:nth-child(2) { animation-delay: 0.15s; }
+    .typing-bubble span:nth-child(3) { animation-delay: 0.30s; }
+    @keyframes dot-bounce {
+      0%,60%,100% { transform: translateY(0);    opacity:.5; }
+      30%          { transform: translateY(-5px); opacity:1; }
+    }
+
+    .input-bar {
+      background: var(--header-bg);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-top: 1px solid var(--border);
+      padding: 10px 16px;
+      padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .mic-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bubble-in);
+      color: var(--text-dim);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .mic-btn:active { transform: scale(0.9); }
+
+    .input-wrap {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      display: flex;
+      align-items: flex-end;
+      padding: 7px 12px;
+      min-height: 36px;
+    }
+
+    #msgInput {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 16px;
+      font-family: inherit;
+      color: #000;
+      line-height: 1.4;
+      resize: none;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+    #msgInput::placeholder { color: var(--text-dim); }
+    #msgInput::-webkit-scrollbar { display: none; }
+
+    .send-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bubble-out);
+      color: white;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-left: 6px;
+      margin-bottom: 1px;
+      transition: background 0.15s, transform 0.1s, opacity 0.15s;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .send-btn.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .send-btn:active { transform: scale(0.88); }
+
+    .suggestions {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 8px 16px 0;
+      scrollbar-width: none;
+    }
+    .suggestions::-webkit-scrollbar { display: none; }
+    .suggestion-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 7px 14px;
+      font-size: 14px;
+      color: var(--bubble-out);
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.12s;
+      flex-shrink: 0;
+    }
+    .suggestion-chip:active { background: #e5e5ea; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="avatar">🤖</div>
+  <div class="header-info">
+    <div class="header-name">Nova</div>
+    <div class="header-sub">iBELL Support · Online</div>
+  </div>
+  <div class="header-badge">iBELL</div>
+</div>
+
+<div class="suggestions" id="suggestions">
+  <div class="suggestion-chip" onclick="sendSuggestion(this)">Track my order</div>
+  <div class="suggestion-chip" onclick="sendSuggestion(this)">Book a service</div>
+  <div class="suggestion-chip" onclick="sendSuggestion(this)">Warranty claim</div>
+  <div class="suggestion-chip" onclick="sendSuggestion(this)">Product info</div>
+  <div class="suggestion-chip" onclick="sendSuggestion(this)">Speak to agent</div>
+</div>
+
+<div class="messages" id="messages">
+  <div class="date-label">Today</div>
+</div>
+
+<div class="input-bar">
+  <button class="mic-btn" title="Voice (coming soon)">🎤</button>
+  <div class="input-wrap">
+    <textarea id="msgInput" rows="1" placeholder="Ask Nova anything..."
+      oninput="onInput()" onkeydown="onKey(event)"></textarea>
+    <button class="send-btn" id="sendBtn" onclick="send()">▲</button>
+  </div>
+</div>
+
+<script>
+  const messagesEl = document.getElementById('messages');
+  const inputEl    = document.getElementById('msgInput');
+  const sendBtn    = document.getElementById('sendBtn');
+  let history = [];
+  let busy    = false;
+
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      addBotMessage("Hi! I'm Nova from iBELL support. How can I help you today?");
+    }, 400);
+  });
+
+  function onInput() {
+    const val = inputEl.value.trim();
+    sendBtn.classList.toggle('visible', val.length > 0);
+    inputEl.style.height = 'auto';
+    inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+  }
+
+  function onKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  }
+
+  async function send() {
+    const text = inputEl.value.trim();
+    if (!text || busy) return;
+
+    inputEl.value = '';
+    inputEl.style.height = 'auto';
+    sendBtn.classList.remove('visible');
+    hideSuggestions();
+
+    addUserMessage(text);
+    history.push({ role: 'user', content: text });
+
+    busy = true;
+    const typingEl = showTyping();
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: history }),
+      });
+
+      const data = await res.json();
+      removeTyping(typingEl);
+
+      const reply = data.reply || "I'm having a moment — please try again!";
+      addBotMessage(reply);
+      history.push({ role: 'assistant', content: reply });
+
+    } catch (err) {
+      removeTyping(typingEl);
+      addBotMessage("Connection error — please try again.");
+      console.error(err);
+    }
+
+    busy = false;
+  }
+
+  function sendSuggestion(el) {
+    inputEl.value = el.textContent;
+    onInput();
+    send();
+  }
+
+  function hideSuggestions() {
+    document.getElementById('suggestions').style.display = 'none';
+  }
+
+  function addUserMessage(text) {
+    const row = document.createElement('div');
+    row.className = 'msg-row outgoing';
+    row.innerHTML = `<div class="bubble">${escHtml(text)}</div>
+                     <div class="msg-time">${timeNow()}</div>`;
+    messagesEl.appendChild(row);
+    scrollBottom();
+  }
+
+  function addBotMessage(text) {
+    const row = document.createElement('div');
+    row.className = 'msg-row incoming';
+    row.innerHTML = `<div class="bubble">${escHtml(text)}</div>
+                     <div class="msg-time">${timeNow()}</div>`;
+    messagesEl.appendChild(row);
+    scrollBottom();
+  }
+
+  function showTyping() {
+    const row = document.createElement('div');
+    row.className = 'msg-row incoming';
+    row.innerHTML = `<div class="typing-bubble">
+      <span></span><span></span><span></span>
+    </div>`;
+    messagesEl.appendChild(row);
+    scrollBottom();
+    return row;
+  }
+
+  function removeTyping(el) {
+    el?.remove();
+  }
+
+  function scrollBottom() {
+    requestAnimationFrame(() => {
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    });
+  }
+
+  function timeNow() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function escHtml(str) {
+    return str
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/\n/g,'<br>');
+  }
+</script>
+</body>
+</html>
