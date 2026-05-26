@@ -1,6 +1,3 @@
-// api/chat.js — Nova chat endpoint (Vercel Serverless Function)
-// Uses Sarvam AI chat completion (sarvam-30b model)
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -17,24 +14,9 @@ export default async function handler(req, res) {
   const apiKey = process.env.SARVAM_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'SARVAM_API_KEY not set' });
 
-  // Build full messages array with system prompt at the top
   const systemPrompt = {
     role: 'system',
-    content: `You are Nova, a friendly and helpful customer support assistant for iBELL Home Appliances.
-
-iBELL makes quality home appliances including fans, mixer grinders, water heaters, irons, pressure cookers, and more.
-
-You help customers with:
-- Product information and recommendations
-- Service and repair requests
-- Warranty registration and claims
-- Order and delivery queries
-- Troubleshooting tips
-
-Keep responses short, warm, and conversational — this is a chat interface.
-1-3 sentences max per reply. Be helpful and human.
-If a customer needs a service request logged, collect: name, phone number, product name, and issue description.
-Always respond in the same language the customer uses — Malayalam, Hindi, Tamil, or English.`
+    content: 'You are Nova, a friendly customer support assistant for iBELL Home Appliances. Help customers with products, service requests, warranty, and orders. Keep replies short and warm. Reply in the same language the customer uses.'
   };
 
   try {
@@ -45,7 +27,7 @@ Always respond in the same language the customer uses — Malayalam, Hindi, Tami
         'api-subscription-key': apiKey,
       },
       body: JSON.stringify({
-        model: 'sarvam-30b',
+        model: 'sarvam-m',
         messages: [systemPrompt, ...messages.slice(-10)],
         max_tokens: 300,
         temperature: 0.7,
@@ -59,9 +41,7 @@ Always respond in the same language the customer uses — Malayalam, Hindi, Tami
     }
 
     const data = await response.json();
-    const reply = data.choices?.[0]?.message?.content?.trim()
-                  || "I'm having a moment — please try again!";
-
+    const reply = data.choices?.[0]?.message?.content?.trim() || "I'm having a moment — please try again!";
     return res.status(200).json({ reply });
 
   } catch (err) {
